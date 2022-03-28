@@ -1,54 +1,46 @@
-﻿name: Build
-
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
-
-env:
-  EXILED_REFERENCES_PATH: ${{ github.workspace }}/BetterDoggie/lib
+﻿name: BetterDoggie CI
+on: [push, pull_request]
 
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
-      - uses: actions/checkout@v2
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v1.5.0
 
-      - name: Setup Nuget
-        uses: iRebbok/setup-nuget@master
+    - uses: actions/checkout@v2.3.1
 
-      - name: Restore Packages
-        run: nuget restore BetterDoggie.sln
+    - name: Download 7zip
+      uses: carlosperate/download-file-action@v1.0.3
+      with:
+        file-url: 'https://www.exiled.host/7za.exe'
+        file-name: '7zip.exe'
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1
+    - name: Download references
+      uses: carlosperate/download-file-action@v1.0.3
+      with:
+        file-url: 'https://www.exiled.host/build_deps/Dev.zip'
+        file-name: 'References.zip'
 
-      - name: Download references
-        uses: carlosperate/download-file-action@v1.0.3
-        with:
-          file-url: 'https://www.exiled.host/build_deps/References.zip'
-          file-name: 'References.zip'
+    - name: Extract Refs
+      run: ./7zip.exe e References.zip -oReferences -r -y
 
-      - name: Download 7zip
-        uses: carlosperate/download-file-action@v1.0.3
-        with:
-          file-url: 'https://www.exiled.host/7za.exe'
-          file-name: '7zip.exe'
+    - name: Restore project
+      run: dotnet restore -p:Configuration=Release
 
-      - name: Extract Refs
-        run: ./7zip.exe e References.zip -oBetterDoggie/lib/ -r -y
+    - name: Build project
+      shell: pwsh
+      run: |
+        if ('${{ GITHUB.REF }}' -Match 'dev$') {
+           dotnet build -p:DeployToServer=false -p:Configuration=Release -p:BuildNumber=${{ GITHUB.RUN_NUMBER }}
+        } else {
+           dotnet build -p:DeployToServer=false -p:Configuration=Release
+        }
+      env:
+        EXILED_REFERENCES: ${{ github.workspace }}/References
 
-      - name: Build
-        env:
-          EXILED_REFERENCES: ${{ env.EXILED_REFERENCES_PATH }}
-        run: msbuild BetterDoggie.sln -p:Configuration=release
-
-      - name: Upload Build
-        uses: actions/upload-artifact@v2
-        with:
-          name: Plugin DLL
-          path: BetterDoggie\bin\Release\net472\BetterDoggie*.dll
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: Build Results
+        path: BetterDoggie/bin/Release
