@@ -36,8 +36,9 @@ namespace BetterDoggie
         public override void OnEnabled()
         {
             Instance = this;
-            eventHandlers = new EventHandlers();
+            eventHandlers = new EventHandlers(this);
             PlayerEvents.ChangingRole += eventHandlers.OnChangingRole;
+            PlayerEvents.ReceivingEffect += eventHandlers.OnReceivingEffect;
 
             base.OnEnabled();
         }
@@ -46,6 +47,7 @@ namespace BetterDoggie
         public override void OnDisabled()
         {
             PlayerEvents.ChangingRole -= eventHandlers.OnChangingRole;
+            PlayerEvents.ReceivingEffect -= eventHandlers.OnReceivingEffect;
             eventHandlers = null;
             Instance = null;
 

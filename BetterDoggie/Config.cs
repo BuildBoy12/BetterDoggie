@@ -19,6 +19,11 @@ namespace BetterDoggie
         public bool IsEnabled { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets a value indicating whether the amnesia effect should be disabled.
+        /// </summary>
+        public bool DisableAmnesia { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets the speed boost Scp939 should receive.
         /// </summary>
         [Description("The speed boost Scp939 should receive. Set to 0 or less to disable.")]

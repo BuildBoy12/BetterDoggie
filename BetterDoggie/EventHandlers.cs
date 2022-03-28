@@ -8,6 +8,7 @@
 namespace BetterDoggie
 {
     using BetterDoggie.Components;
+    using CustomPlayerEffects;
     using Exiled.Events.EventArgs;
 
     /// <summary>
@@ -15,6 +16,14 @@ namespace BetterDoggie
     /// </summary>
     public class EventHandlers
     {
+        private readonly Plugin plugin;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EventHandlers"/> class.
+        /// </summary>
+        /// <param name="plugin">An instance of the <see cref="Plugin"/> class.</param>
+        public EventHandlers(Plugin plugin) => this.plugin = plugin;
+
         /// <inheritdoc cref="Exiled.Events.Handlers.Player.OnChangingRole(ChangingRoleEventArgs)"/>
         public void OnChangingRole(ChangingRoleEventArgs ev)
         {
@@ -25,6 +34,13 @@ namespace BetterDoggie
                 UnityEngine.Object.Destroy(scp939Component);
 
             ev.Player.GameObject.AddComponent<Scp939Component>();
+        }
+
+        /// <inheritdoc cref="Exiled.Events.Handlers.Player.OnReceivingEffect(ReceivingEffectEventArgs)"/>
+        public void OnReceivingEffect(ReceivingEffectEventArgs ev)
+        {
+            if (plugin.Config.DisableAmnesia && ev.Effect is Amnesia)
+                ev.IsAllowed = false;
         }
     }
 }
